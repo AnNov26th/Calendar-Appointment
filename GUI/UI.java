@@ -25,11 +25,9 @@ import java.util.Random;
 public class UI extends JFrame {
     private CalendarLogic calendarLogic;
 
-    // --- Các biến cho giao diện Bảng ---
     private JTable appointmentTable;
     private DefaultTableModel tableModel;
 
-    // --- Các biến cho giao diện Lịch (Month View) ---
     private JPanel centerCardPanel;
     private CardLayout cardLayout;
     private JPanel calendarGridPanel;
@@ -39,11 +37,10 @@ public class UI extends JFrame {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    // Palette màu hiện đại
-    private final Color COLOR_PRIMARY = new Color(52, 152, 219); // Blue
-    private final Color COLOR_SUCCESS = new Color(46, 204, 113); // Green
-    private final Color COLOR_BG = new Color(248, 249, 250); // Off-white
-    private final Color COLOR_NAVY = new Color(44, 62, 80); // Header Navy
+    private final Color COLOR_PRIMARY = new Color(52, 152, 219);
+    private final Color COLOR_SUCCESS = new Color(46, 204, 113);
+    private final Color COLOR_BG = new Color(248, 249, 250);
+    private final Color COLOR_NAVY = new Color(44, 62, 80);
     private final Color TEXT_DARK = new Color(51, 51, 51);
 
     private final Color[] PASTEL_COLORS = {
@@ -57,7 +54,6 @@ public class UI extends JFrame {
         this.calendarLogic = logic;
         this.currentDisplayedMonth = YearMonth.now();
 
-        // Tinh chỉnh UIManager để các thông báo mặc định cũng đẹp hơn
         UIManager.put("OptionPane.background", Color.WHITE);
         UIManager.put("Panel.background", Color.WHITE);
         UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
@@ -69,7 +65,7 @@ public class UI extends JFrame {
     }
 
     private void setupMainFrame() {
-        setTitle("Hệ Thống Quản Lý Cuộc Hẹn - Bách Khoa");
+        setTitle("Hệ Thống Quản Lý Cuộc Hẹn");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -80,7 +76,6 @@ public class UI extends JFrame {
         mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
         setContentPane(mainPanel);
 
-        // Header
         RoundedPanel headerPanel = new RoundedPanel(15, COLOR_NAVY);
         headerPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 15));
         JLabel titleLabel = new JLabel("LỊCH HẸN CHUNG");
@@ -89,24 +84,20 @@ public class UI extends JFrame {
         headerPanel.add(titleLabel);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-        // CENTER: CardLayout
         cardLayout = new CardLayout();
         centerCardPanel = new JPanel(cardLayout);
 
-        // 1. Panel Bảng
         setupTable();
         JScrollPane scrollPane = new JScrollPane(appointmentTable);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 224, 228), 1, true));
         scrollPane.getViewport().setBackground(Color.WHITE);
         centerCardPanel.add(scrollPane, "TABLE_VIEW");
 
-        // 2. Panel Lịch
         JPanel calendarContainer = buildCalendarView();
         centerCardPanel.add(calendarContainer, "CALENDAR_VIEW");
 
         mainPanel.add(centerCardPanel, BorderLayout.CENTER);
 
-        // SOUTH: Các nút bấm
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         buttonPanel.setBackground(COLOR_BG);
 
@@ -123,10 +114,6 @@ public class UI extends JFrame {
         buttonPanel.add(addButton);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
     }
-
-    // ========================================================================
-    // PHẦN LỊCH (MONTH VIEW)
-    // ========================================================================
 
     private JPanel buildCalendarView() {
         JPanel panel = new JPanel(new BorderLayout());
@@ -204,7 +191,7 @@ public class UI extends JFrame {
 
             if (currentDate.equals(LocalDate.now())) {
                 dayLbl.setForeground(COLOR_PRIMARY);
-                dayCell.setBackground(new Color(240, 248, 255)); // Highlight nhẹ nền ngày hiện tại
+                dayCell.setBackground(new Color(240, 248, 255));
             }
             dayCell.add(dayLbl, BorderLayout.NORTH);
 
@@ -248,10 +235,6 @@ public class UI extends JFrame {
         calendarGridPanel.repaint();
     }
 
-    // ========================================================================
-    // PHẦN BẢNG VÀ LOGIC
-    // ========================================================================
-
     private void setupTable() {
         String[] columns = { "Người đặt", "Tên cuộc hẹn", "Địa điểm", "Bắt đầu", "Kết thúc", "Loại" };
         tableModel = new DefaultTableModel(columns, 0) {
@@ -292,10 +275,6 @@ public class UI extends JFrame {
         }
         refreshCalendarGrid();
     }
-
-    // ========================================================================
-    // CUSTOM DIALOGS & COMPONENTS
-    // ========================================================================
 
     private void showAddFormDialog() {
         CustomDialog dialog = new CustomDialog(this, "TẠO CUỘC HẸN MỚI");
