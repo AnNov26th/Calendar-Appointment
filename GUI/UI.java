@@ -1,0 +1,563 @@
+package GUI;
+
+import BLL.CalendarLogic;
+import Entities.Appointment;
+import Entities.GroupMeeting;
+import Entities.User;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Random;
+
+public class UI extends JFrame {
+    private CalendarLogic calendarLogic;
+
+    // --- Các biến cho giao diện Bảng ---
+    private JTable appointmentTable;
+    private DefaultTableModel tableModel;
+
+    // --- Các biến cho giao diện Lịch (Month View) ---
+    private JPanel centerCardPanel;
+    private CardLayout cardLayout;
+    private JPanel calendarGridPanel;
+    private JLabel monthLabel;
+    private YearMonth currentDisplayedMonth;
+    private boolean isTableView = true;
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    // Palette màu hiện đại
+    private final Color COLOR_PRIMARY = new Color(52, 152, 219); // Blue
+    private final Color COLOR_SUCCESS = new Color(46, 204, 113); // Green
+    private final Color COLOR_BG = new Color(248, 249, 250); // Off-white
+    private final Color COLOR_NAVY = new Color(44, 62, 80); // Header Navy
+    private final Color TEXT_DARK = new Color(51, 51, 51);
+
+    private final Color[] PASTEL_COLORS = {
+            new Color(255, 179, 186), new Color(255, 223, 186),
+            new Color(255, 255, 186), new Color(186, 255, 201),
+            new Color(186, 225, 255), new Color(226, 191, 255)
+    };
+    private Random random = new Random();
+
+    public UI(CalendarLogic logic) {
+        this.calendarLogic = logic;
+        this.currentDisplayedMonth = YearMonth.now();
+
+        // Tinh chỉnh UIManager để các thông báo mặc định cũng đẹp hơn
+        UIManager.put("OptionPane.background", Color.WHITE);
+        UIManager.put("Panel.background", Color.WHITE);
+        UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 14));
+        UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 12));
+
+        setupMainFrame();
+        refreshAllViews();
+        setVisible(true);
+    }
+
+    private void setupMainFrame() {
+        setTitle("Hệ Thống Quản Lý Cuộc Hẹn - Bách Khoa");
+        setSize(1000, 700);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        getContentPane().setBackground(COLOR_BG);
+
+        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
+        mainPanel.setBackground(COLOR_BG);
+        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        setContentPane(mainPanel);
+
+        // Header
+        RoundedPanel headerPanel = new RoundedPanel(15, COLOR_NAVY);
+        headerPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 15));
+        JLabel titleLabel = new JLabel("LỊCH HẸN CHUNG");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        headerPanel.add(titleLabel);
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+
+        // CENTER: CardLayout
+        cardLayout = new CardLayout();
+        centerCardPanel = new JPanel(cardLayout);
+
+        // 1. Panel Bảng
+        setupTable();
+        JScrollPane scrollPane = new JScrollPane(appointmentTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 224, 228), 1, true));
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        centerCardPanel.add(scrollPane, "TABLE_VIEW");
+
+        // 2. Panel Lịch
+        JPanel calendarContainer = buildCalendarView();
+        centerCardPanel.add(calendarContainer, "CALENDAR_VIEW");
+
+        mainPanel.add(centerCardPanel, BorderLayout.CENTER);
+
+        // SOUTH: Các nút bấm
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        buttonPanel.setBackground(COLOR_BG);
+
+        ModernButton switchViewButton = new ModernButton("Đổi Góc Nhìn", new Color(142, 68, 173));
+        switchViewButton.addActionListener(e -> {
+            isTableView = !isTableView;
+            cardLayout.show(centerCardPanel, isTableView ? "TABLE_VIEW" : "CALENDAR_VIEW");
+        });
+
+        ModernButton addButton = new ModernButton("Thêm Cuộc Hẹn +", COLOR_SUCCESS);
+        addButton.addActionListener(e -> showAddFormDialog());
+
+        buttonPanel.add(switchViewButton);
+        buttonPanel.add(addButton);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    // ========================================================================
+    // PHẦN LỊCH (MONTH VIEW)
+    // ========================================================================
+
+    private JPanel buildCalendarView() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createLineBorder(new Color(220, 224, 228), 1, true));
+
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        navPanel.setBackground(Color.WHITE);
+
+        ModernButton prevBtn = new ModernButton("< Trước", COLOR_PRIMARY);
+        prevBtn.setPreferredSize(new Dimension(100, 35));
+        prevBtn.addActionListener(e -> {
+            currentDisplayedMonth = currentDisplayedMonth.minusMonths(1);
+            refreshCalendarGrid();
+        });
+
+        monthLabel = new JLabel("", SwingConstants.CENTER);
+        monthLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        monthLabel.setPreferredSize(new Dimension(200, 30));
+
+        ModernButton nextBtn = new ModernButton("Sau >", COLOR_PRIMARY);
+        nextBtn.setPreferredSize(new Dimension(100, 35));
+        nextBtn.addActionListener(e -> {
+            currentDisplayedMonth = currentDisplayedMonth.plusMonths(1);
+            refreshCalendarGrid();
+        });
+
+        navPanel.add(prevBtn);
+        navPanel.add(monthLabel);
+        navPanel.add(nextBtn);
+        panel.add(navPanel, BorderLayout.NORTH);
+
+        calendarGridPanel = new JPanel(new GridLayout(0, 7, 2, 2));
+        calendarGridPanel.setBackground(new Color(230, 230, 230));
+        panel.add(calendarGridPanel, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void refreshCalendarGrid() {
+        calendarGridPanel.removeAll();
+        monthLabel.setText("Tháng " + currentDisplayedMonth.getMonthValue() + " - " + currentDisplayedMonth.getYear());
+
+        String[] daysOfWeek = { "T2", "T3", "T4", "T5", "T6", "T7", "CN" };
+        for (String day : daysOfWeek) {
+            JLabel lbl = new JLabel(day, SwingConstants.CENTER);
+            lbl.setOpaque(true);
+            lbl.setBackground(new Color(236, 240, 241));
+            lbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            calendarGridPanel.add(lbl);
+        }
+
+        LocalDate firstDayOfMonth = currentDisplayedMonth.atDay(1);
+        int daysInMonth = currentDisplayedMonth.lengthOfMonth();
+        int dayOfWeekIndex = firstDayOfMonth.getDayOfWeek().getValue() - 1;
+
+        for (int i = 0; i < dayOfWeekIndex; i++) {
+            JPanel emptyPanel = new JPanel();
+            emptyPanel.setBackground(new Color(250, 250, 250));
+            calendarGridPanel.add(emptyPanel);
+        }
+
+        List<Appointment> allApps = calendarLogic.getAllAppointments();
+
+        for (int day = 1; day <= daysInMonth; day++) {
+            LocalDate currentDate = currentDisplayedMonth.atDay(day);
+
+            JPanel dayCell = new JPanel(new BorderLayout());
+            dayCell.setBackground(Color.WHITE);
+            dayCell.setBorder(new LineBorder(new Color(240, 240, 240)));
+
+            JLabel dayLbl = new JLabel(String.valueOf(day));
+            dayLbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            dayLbl.setBorder(new EmptyBorder(2, 5, 0, 0));
+
+            if (currentDate.equals(LocalDate.now())) {
+                dayLbl.setForeground(COLOR_PRIMARY);
+                dayCell.setBackground(new Color(240, 248, 255)); // Highlight nhẹ nền ngày hiện tại
+            }
+            dayCell.add(dayLbl, BorderLayout.NORTH);
+
+            JPanel eventsPanel = new JPanel();
+            eventsPanel.setLayout(new BoxLayout(eventsPanel, BoxLayout.Y_AXIS));
+            eventsPanel.setOpaque(false);
+
+            for (Appointment app : allApps) {
+                if (app.getStartTime().toLocalDate().equals(currentDate)) {
+                    JLabel eventLbl = new JLabel(" " + app.getName());
+                    eventLbl.setOpaque(true);
+                    eventLbl.setBackground(PASTEL_COLORS[random.nextInt(PASTEL_COLORS.length)]);
+                    eventLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+                    eventLbl.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1));
+                    eventLbl.setToolTipText("Nhấn để xem chi tiết");
+                    eventLbl.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                    eventLbl.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            showDetailDialog(app);
+                        }
+                    });
+
+                    eventsPanel.add(eventLbl);
+                }
+            }
+            dayCell.add(eventsPanel, BorderLayout.CENTER);
+            calendarGridPanel.add(dayCell);
+        }
+
+        int totalCells = dayOfWeekIndex + daysInMonth;
+        int remainingCells = (7 - (totalCells % 7)) % 7;
+        for (int i = 0; i < remainingCells; i++) {
+            JPanel emptyPanel = new JPanel();
+            emptyPanel.setBackground(new Color(250, 250, 250));
+            calendarGridPanel.add(emptyPanel);
+        }
+
+        calendarGridPanel.revalidate();
+        calendarGridPanel.repaint();
+    }
+
+    // ========================================================================
+    // PHẦN BẢNG VÀ LOGIC
+    // ========================================================================
+
+    private void setupTable() {
+        String[] columns = { "Người đặt", "Tên cuộc hẹn", "Địa điểm", "Bắt đầu", "Kết thúc", "Loại" };
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        appointmentTable = new JTable(tableModel);
+        appointmentTable.setRowHeight(40);
+        appointmentTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        appointmentTable.setForeground(TEXT_DARK);
+        appointmentTable.setGridColor(new Color(230, 230, 230));
+        appointmentTable.setSelectionBackground(new Color(212, 230, 241));
+        appointmentTable.setShowVerticalLines(false);
+
+        JTableHeader tableHeader = appointmentTable.getTableHeader();
+        tableHeader.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        tableHeader.setBackground(Color.WHITE);
+        tableHeader.setPreferredSize(new Dimension(100, 45));
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < appointmentTable.getColumnCount(); i++) {
+            appointmentTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+    }
+
+    private void refreshAllViews() {
+        tableModel.setRowCount(0);
+        List<Appointment> appointments = calendarLogic.getAllAppointments();
+        for (Appointment app : appointments) {
+            tableModel.addRow(new Object[] {
+                    app.getOwner().getUserName(), app.getName(), app.getLocation(),
+                    app.getStartTime().format(FORMATTER), app.getEndTime().format(FORMATTER),
+                    (app instanceof GroupMeeting) ? "Group Meeting" : "Cá nhân"
+            });
+        }
+        refreshCalendarGrid();
+    }
+
+    // ========================================================================
+    // CUSTOM DIALOGS & COMPONENTS
+    // ========================================================================
+
+    private void showAddFormDialog() {
+        CustomDialog dialog = new CustomDialog(this, "TẠO CUỘC HẸN MỚI");
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(12, 10, 12, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JTextField userField = createStyledTextField();
+        JTextField nameField = createStyledTextField();
+        JTextField locationField = createStyledTextField();
+
+        LocalDateTime now = LocalDateTime.now().withSecond(0).withNano(0);
+        JTextField startField = createStyledTextField();
+        startField.setText(now.format(FORMATTER));
+        JTextField endField = createStyledTextField();
+        endField.setText(now.plusHours(1).format(FORMATTER));
+
+        addFormRow(panel, "Người đặt:", userField, gbc, 0);
+        addFormRow(panel, "Tên cuộc hẹn:", nameField, gbc, 1);
+        addFormRow(panel, "Địa điểm:", locationField, gbc, 2);
+        addFormRow(panel, "Bắt đầu:", startField, gbc, 3);
+        addFormRow(panel, "Kết thúc:", endField, gbc, 4);
+
+        ModernButton saveButton = new ModernButton("Lưu Cuộc Hẹn", COLOR_SUCCESS);
+        saveButton.setPreferredSize(new Dimension(200, 40));
+        saveButton.addActionListener(e -> {
+            try {
+                String userName = userField.getText().trim();
+                if (userName.isEmpty()) {
+                    showWarning("Vui lòng nhập tên Người đặt!");
+                    return;
+                }
+
+                User owner = calendarLogic.getOrCreateUser(userName);
+                String name = nameField.getText();
+                String location = locationField.getText();
+                LocalDateTime start = LocalDateTime.parse(startField.getText(), FORMATTER);
+                LocalDateTime end = LocalDateTime.parse(endField.getText(), FORMATTER);
+
+                Appointment newApp = new Appointment(name, location, start, end, owner);
+
+                if (!newApp.checkValid()) {
+                    showWarning("Thông tin không hợp lệ! Vui lòng kiểm tra tên và thời gian.");
+                    return;
+                }
+
+                GroupMeeting matchingGroup = calendarLogic.findGroupMeeting(name, Duration.between(start, end));
+                if (matchingGroup != null) {
+                    int choice = JOptionPane.showConfirmDialog(dialog,
+                            "Phát hiện Group Meeting cùng tên và thời lượng. Tham gia không?",
+                            "Xác nhận", JOptionPane.YES_NO_OPTION);
+                    if (choice == JOptionPane.YES_OPTION) {
+                        matchingGroup.addParticipant(owner);
+                        showCustomInfoDialog("Thành công", "Đã thêm bạn vào Group Meeting.");
+                        dialog.dispose();
+                        refreshAllViews();
+                        return;
+                    }
+                }
+
+                Appointment conflictApp = calendarLogic.checkConflict(start, end, owner);
+                if (conflictApp != null) {
+                    Object[] options = { "Chọn giờ khác", "Thay thế lịch cũ" };
+                    int choice = JOptionPane.showOptionDialog(dialog,
+                            "Trùng lịch với: " + conflictApp.getName() + ".\nBạn muốn làm gì?",
+                            "Xung đột", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options,
+                            options[0]);
+
+                    if (choice == 1) {
+                        calendarLogic.deleteAppointment(conflictApp);
+                        calendarLogic.confirmAndSave(newApp);
+                        showCustomInfoDialog("Thành công", "Đã ghi đè và lưu lịch mới!");
+                    } else {
+                        return;
+                    }
+                } else {
+                    calendarLogic.confirmAndSave(newApp);
+                    showCustomInfoDialog("Thành công", "Đã lưu cuộc hẹn!");
+                }
+
+                dialog.dispose();
+                refreshAllViews();
+            } catch (Exception ex) {
+                showWarning("Sai định dạng! Dạng chuẩn: yyyy-MM-dd HH:mm");
+            }
+        });
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(saveButton, gbc);
+
+        dialog.setMainContent(panel);
+        dialog.setVisible(true);
+    }
+
+    private void addFormRow(JPanel p, String label, JTextField tf, GridBagConstraints gbc, int y) {
+        gbc.gridx = 0;
+        gbc.gridy = y;
+        gbc.weightx = 0.3;
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        p.add(lbl, gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        p.add(tf, gbc);
+    }
+
+    private JTextField createStyledTextField() {
+        JTextField field = new JTextField();
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        field.setPreferredSize(new Dimension(220, 38));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        return field;
+    }
+
+    public void showWarning(String message) {
+        JOptionPane.showMessageDialog(this, message, "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+    }
+
+    private void showCustomInfoDialog(String title, String message) {
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showDetailDialog(Appointment app) {
+        CustomDialog detailDialog = new CustomDialog(this, "CHI TIẾT CUỘC HẸN");
+        detailDialog.setSize(400, 450);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(new EmptyBorder(10, 20, 20, 20));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 5, 8, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 13);
+        Font valueFont = new Font("Segoe UI", Font.PLAIN, 14);
+
+        String[][] data = {
+                { "Người đặt:", app.getOwner().getUserName() },
+                { "Tên cuộc hẹn:", app.getName() },
+                { "Địa điểm:", app.getLocation() },
+                { "Thời gian bắt đầu:", app.getStartTime().format(FORMATTER) },
+                { "Thời gian kết thúc:", app.getEndTime().format(FORMATTER) },
+                { "Loại cuộc hẹn:", (app instanceof GroupMeeting) ? "Họp Nhóm" : "Cá nhân" }
+        };
+
+        for (int i = 0; i < data.length; i++) {
+            gbc.gridy = i;
+            gbc.gridx = 0;
+            gbc.weightx = 0.3;
+            JLabel lbl = new JLabel(data[i][0]);
+            lbl.setFont(labelFont);
+            lbl.setForeground(COLOR_NAVY);
+            panel.add(lbl, gbc);
+
+            gbc.gridx = 1;
+            gbc.weightx = 0.7;
+            JLabel val = new JLabel(data[i][1]);
+            val.setFont(valueFont);
+            panel.add(val, gbc);
+        }
+
+        ModernButton closeBtn = new ModernButton("Đóng", COLOR_PRIMARY);
+        closeBtn.addActionListener(e -> detailDialog.dispose());
+
+        gbc.gridy = data.length;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(20, 0, 0, 0);
+        gbc.fill = GridBagConstraints.NONE;
+        panel.add(closeBtn, gbc);
+
+        detailDialog.setMainContent(panel);
+        detailDialog.setVisible(true);
+    }
+
+    class ModernButton extends JButton {
+        private Color baseColor;
+
+        public ModernButton(String text, Color color) {
+            super(text);
+            this.baseColor = color;
+            setContentAreaFilled(false);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setForeground(Color.WHITE);
+            setFont(new Font("Segoe UI", Font.BOLD, 13));
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            setBorder(new EmptyBorder(8, 20, 8, 20));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            if (getModel().isPressed())
+                g2.setColor(baseColor.darker());
+            else if (getModel().isRollover())
+                g2.setColor(baseColor.brighter());
+            else
+                g2.setColor(baseColor);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+            super.paintComponent(g);
+            g2.dispose();
+        }
+    }
+
+    class CustomDialog extends JDialog {
+        private JPanel contentArea;
+
+        public CustomDialog(JFrame parent, String titleText) {
+            super(parent, titleText, true);
+            setSize(450, 500);
+            setLocationRelativeTo(parent);
+            setLayout(new BorderLayout());
+            getContentPane().setBackground(Color.WHITE);
+
+            // Custom Header cho Dialog
+            JPanel header = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            header.setBackground(COLOR_NAVY);
+            header.setBorder(new EmptyBorder(15, 0, 15, 0));
+            JLabel title = new JLabel(titleText);
+            title.setForeground(Color.WHITE);
+            title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            header.add(title);
+            add(header, BorderLayout.NORTH);
+
+            contentArea = new JPanel(new BorderLayout());
+            contentArea.setBackground(Color.WHITE);
+            add(contentArea, BorderLayout.CENTER);
+        }
+
+        public void setMainContent(JPanel p) {
+            contentArea.add(p, BorderLayout.CENTER);
+        }
+    }
+
+    class RoundedPanel extends JPanel {
+        private int radius;
+        private Color color;
+
+        public RoundedPanel(int r, Color c) {
+            this.radius = r;
+            this.color = c;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+            g2.dispose();
+        }
+    }
+}

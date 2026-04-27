@@ -1,0 +1,11 @@
+Let's do a class diagram and a sequence diagram for the following casual use case, Add Calendar Appointment :
+-The scenario begins when the user chooses to add a new appointment in the UI. 
+-The UI notices which part of the calendar is active and pops up an Add Appointment window for that date and time.
+-The user enters the necessary information about the appointment's name, location, start and end times. 
+-The UI will prevent the user from entering an appointment that has invalid information, such as an empty name or negative duration.  
+-The calendar records the new appointment in the user's list of appointments. 
+-Any reminder selected by the user is added to the list of reminders.
+-If the user already has an appointment at that time, the user is shown a warning message and asked to choose an available time or replace the previous appointment.  
+-If the user enters an appointment with the same name and duration as an existing group meeting, 
+-the calendar asks the user whether he/she intended to join that group meeting instead.  
+-If so, the user is added to that group meeting's list of participants.
