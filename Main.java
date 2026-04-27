@@ -6,7 +6,6 @@ import Entities.Appointment;
 import Entities.GroupMeeting;
 
 import java.time.LocalDateTime;
-import java.util.Random;
 import javax.swing.SwingUtilities;
 
 public class Main {
@@ -22,57 +21,77 @@ public class Main {
     }
 
     private static void setupSampleData(AppointmentDAO dao) {
-        User u1 = new User("01", "Trần Hoài An");
-        User u2 = new User("02", "Nguyễn Bá Giàu");
-        User u3 = new User("03", "Trần Kim Lanh");
+        User u1 = new User("U01", "Trần Hoài An");
+        User u2 = new User("U02", "Nguyễn Bá Giàu");
+        User u3 = new User("U03", "Trần Kim Lanh");
 
         dao.saveUser(u1);
         dao.saveUser(u2);
         dao.saveUser(u3);
 
-        User[] users = { u1, u2, u3 };
+        createGroup(dao, "Họp Kick-off Đồ án", "Phòng tự học", 5, 2, 8, 0, 2, u1, u2, u3);
+        createApp(dao, "Phân tích yêu cầu hệ thống", "Thư viện", 5, 4, 14, 0, 2, u1);
+        createApp(dao, "Thiết kế Database SQL", "Phòng trọ", 5, 5, 9, 0, 3, u2);
+        createApp(dao, "Vẽ Sequence Diagram", "Thư viện", 5, 6, 15, 0, 2, u3);
 
-        String[] subjects = {
-                "Báo cáo tiến độ PBL3", "Fix bug C# quản lý shop giày",
-                "Chuẩn bị Hugo Camping Emberline", "Thiết kế Database SQL Server",
-                "Họp ban tổ chức Talkshow", "Review giao diện WinForms",
-                "Phân tích hệ thống OOAD", "Luyện tập Guitar / Piano",
-                "Test thuật toán game Cờ Caro", "Gặp thầy hướng dẫn Bách Khoa"
-        };
+        createGroup(dao, "Review sơ đồ thiết kế", "Google Meet", 5, 9, 19, 0, 1, u2, u1, u3);
+        createApp(dao, "Code UI logic (Bỏ qua 3-layer)", "Phòng Lab", 5, 11, 8, 30, 4, u1);
+        createApp(dao, "Luyện tập Guitar", "Nhà văn hóa", 5, 12, 18, 0, 1, u1);
+        createApp(dao, "Chuẩn bị kịch bản cho Host Minh Tâm", "Hòa Khánh", 5, 13, 15, 0, 2, u3);
+        createApp(dao, "Tạo form Đăng nhập WinForms", "Phòng trọ", 5, 15, 20, 0, 2, u2);
+        createGroup(dao, "Ghép code UI lần 1", "Phòng tự học", 5, 16, 9, 0, 3, u1, u2);
 
-        String[] locations = {
-                "Phòng lab Khu C", "Google Meet", "Thư viện BK",
-                "Quán Cafe khu Hòa Khánh", "Discord nhóm", "Phòng tự học"
-        };
+        createApp(dao, "Sửa lỗi query bảng Category", "Phòng Lab", 5, 18, 13, 0, 2, u1);
+        createApp(dao, "Họp ban chủ nhiệm CLB", "Trường BK", 5, 19, 17, 30, 1, u3);
+        createApp(dao, "Kiểm tra kết nối JDBC", "Phòng trọ", 5, 20, 10, 0, 2, u2);
+        createApp(dao, "Chơi Cờ Caro giải trí", "Căn tin", 5, 21, 12, 0, 1, u1);
+        createGroup(dao, "Fix bug chức năng Thêm/Xóa", "Discord", 5, 22, 21, 0, 2, u1, u2);
 
-        Random rand = new Random();
+        createApp(dao, "Viết báo cáo chương 1, 2", "Thư viện", 5, 25, 8, 0, 3, u3);
+        createApp(dao, "Sửa lỗi tham số data size = 5", "Phòng trọ", 5, 26, 14, 0, 2, u1);
+        createApp(dao, "Test thuật toán tìm kiếm", "Phòng Lab", 5, 27, 9, 30, 2, u2);
+        createGroup(dao, "Test toàn bộ hệ thống", "Google Meet", 5, 29, 20, 0, 2, u1, u2, u3);
+        createApp(dao, "Chốt form báo cáo tiến độ", "Thư viện", 5, 30, 15, 0, 1, u3);
 
-        LocalDateTime baseDate = LocalDateTime.of(2026, 4, 27, 0, 0);
+        createGroup(dao, "Họp chuẩn bị slide", "Phòng tự học", 6, 1, 14, 0, 2, u3, u1, u2);
+        createApp(dao, "Gặp thầy hướng dẫn Bách Khoa", "Văn phòng khoa", 6, 3, 9, 0, 1, u1);
+        createApp(dao, "Cập nhật Class Diagram", "Thư viện", 6, 4, 15, 30, 2, u2);
+        createApp(dao, "In báo cáo bản nháp", "Tiệm photo", 6, 5, 10, 0, 1, u3);
+        createGroup(dao, "Báo cáo tiến độ (Giữa kỳ)", "Phòng Lab", 6, 6, 8, 0, 3, u1, u2, u3);
 
-        for (int i = 0; i < 20; i++) {
-            User owner = users[rand.nextInt(users.length)];
-            String name = subjects[rand.nextInt(subjects.length)];
-            String location = locations[rand.nextInt(locations.length)];
+        createApp(dao, "Nghiên cứu biểu đồ thống kê", "Phòng trọ", 6, 8, 19, 0, 2, u1);
+        createApp(dao, "Thêm tính năng xuất Excel", "Phòng Lab", 6, 10, 13, 0, 3, u2);
+        createApp(dao, "Soát lỗi chính tả tài liệu", "Phòng trọ", 6, 11, 20, 0, 2, u3);
+        createGroup(dao, "Review tính năng thống kê", "Discord", 6, 12, 21, 0, 1, u1, u2);
+        createApp(dao, "Dọn dẹp code rác", "Phòng trọ", 6, 14, 9, 0, 2, u1);
 
-            int daysToAdd = rand.nextInt(65);
-            int hour = 8 + rand.nextInt(9);
-            int duration = 1 + rand.nextInt(3);
+        createApp(dao, "Kiểm thử bảo mật đăng nhập", "Phòng Lab", 6, 15, 14, 0, 2, u2);
+        createApp(dao, "Viết Unit Test", "Thư viện", 6, 16, 8, 0, 3, u1);
+        createApp(dao, "Hoàn thiện nội dung Slide", "Căn tin", 6, 18, 15, 0, 2, u3);
+        createGroup(dao, "Tổng duyệt chương trình", "Google Meet", 6, 20, 19, 0, 2, u1, u2, u3);
+        createApp(dao, "In báo cáo bìa cứng", "Tiệm photo", 6, 21, 10, 0, 1, u1);
 
-            LocalDateTime start = baseDate.plusDays(daysToAdd).withHour(hour).withMinute(0);
-            LocalDateTime end = start.plusHours(duration);
+        createApp(dao, "Tập thuyết trình một mình", "Phòng trọ", 6, 22, 20, 0, 2, u3);
+        createApp(dao, "Check lại cáp HDMI máy chiếu", "Phòng hội thảo", 6, 24, 16, 0, 1, u2);
+        createGroup(dao, "BẢO VỆ ĐỒ ÁN CHÍNH THỨC", "Phòng Hội Đồng", 6, 26, 7, 30, 4, u1, u2, u3);
+        createApp(dao, "Nộp source code cho thầy", "Hệ thống trường", 6, 27, 9, 0, 1, u1);
+        createGroup(dao, "Đi ăn mừng hết đồ án!", "Quán nướng", 6, 28, 18, 0, 3, u2, u1, u3);
+    }
 
-            if (rand.nextBoolean()) {
-                GroupMeeting gm = new GroupMeeting(name, location, start, end, owner);
+    private static void createApp(AppointmentDAO dao, String name, String loc,
+            int month, int day, int hour, int minute, int duration, User owner) {
+        LocalDateTime start = LocalDateTime.of(2026, month, day, hour, minute);
+        dao.saveAppointment(new Appointment(name, loc, start, start.plusHours(duration), owner));
+    }
 
-                User participant = users[rand.nextInt(users.length)];
-                if (!participant.getUserID().equals(owner.getUserID())) {
-                    gm.addParticipant(participant);
-                }
-                dao.saveAppointment(gm);
-            } else {
-                Appointment app = new Appointment(name, location, start, end, owner);
-                dao.saveAppointment(app);
-            }
+    private static void createGroup(AppointmentDAO dao, String name, String loc,
+            int month, int day, int hour, int minute, int duration,
+            User owner, User... guests) {
+        LocalDateTime start = LocalDateTime.of(2026, month, day, hour, minute);
+        GroupMeeting gm = new GroupMeeting(name, loc, start, start.plusHours(duration), owner);
+        for (User guest : guests) {
+            gm.addParticipant(guest);
         }
+        dao.saveAppointment(gm);
     }
 }
