@@ -29,6 +29,10 @@ public class Main {
         dao.saveUser(u2);
         dao.saveUser(u3);
 
+        LocalDateTime testStart = LocalDateTime.now().plusMinutes(60);
+        dao.saveAppointment(
+                new Appointment("Test Giao diện Nhắc nhở", "Phòng họp Online", testStart, testStart.plusHours(1), u1));
+
         createApp(dao, "Phân tích yêu cầu hệ thống", "Thư viện", 5, 5, 14, 0, 2, u1);
         createApp(dao, "Thiết kế Database SQL", "Phòng trọ", 5, 5, 9, 0, 3, u2);
         createApp(dao, "Vẽ Sequence Diagram", "Thư viện", 5, 6, 15, 0, 2, u3);

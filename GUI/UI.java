@@ -14,6 +14,8 @@ import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,6 +63,9 @@ public class UI extends JFrame {
 
         setupMainFrame();
         refreshAllViews();
+
+        startReminderTask();
+
         setVisible(true);
     }
 
@@ -388,6 +393,135 @@ public class UI extends JFrame {
         p.add(tf, gbc);
     }
 
+    private void startReminderTask() {
+        Timer timer = new Timer(10000, e -> {
+            LocalDateTime now = LocalDateTime.now();
+            List<Appointment> apps = calendarLogic.getAllAppointments();
+
+            for (Appointment app : apps) {
+                if (app.getReminder() != null && !app.isReminderTriggered()) {
+                    LocalDateTime remTime = app.getReminder().getTime();
+
+                    if (!now.isBefore(remTime) && now.isBefore(app.getStartTime())) {
+                        app.setReminderTriggered(true);
+                        showReminderPopup(app);
+                    }
+                }
+            }
+        });
+        timer.setInitialDelay(2000);
+        timer.start();
+    }
+
+    private void showReminderPopup(Appointment app) {
+        JDialog popup = new JDialog(this);
+        popup.setUndecorated(true);
+        popup.setAlwaysOnTop(true);
+        popup.setSize(380, 190);
+        popup.setBackground(new Color(0, 0, 0, 0));
+
+        JPanel container = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                g2.setColor(new Color(230, 230, 230));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 20, 20);
+                g2.dispose();
+            }
+        };
+        container.setOpaque(false);
+        container.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JPanel accent = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(COLOR_PRIMARY);
+                g2.fillRoundRect(0, 0, 6, getHeight(), 6, 6);
+                g2.dispose();
+            }
+        };
+        accent.setPreferredSize(new Dimension(6, 0));
+        accent.setOpaque(false);
+        container.add(accent, BorderLayout.WEST);
+
+        JPanel content = new JPanel(new GridBagLayout());
+        content.setOpaque(false);
+        content.setBorder(new EmptyBorder(0, 15, 0, 0));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1;
+
+        JLabel titleLbl = new JLabel("THÔNG BÁO NHẮC NHỞ");
+        titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        titleLbl.setForeground(COLOR_PRIMARY);
+        content.add(titleLbl, gbc);
+
+        gbc.gridy++;
+        JLabel nameLbl = new JLabel(app.getName());
+        nameLbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        nameLbl.setForeground(TEXT_DARK);
+        content.add(nameLbl, gbc);
+
+        gbc.gridy++;
+        JLabel msgLbl = new JLabel(
+                "<html><body style='width: 250px'>" + app.getReminder().getMessage() + "</body></html>");
+        msgLbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        msgLbl.setForeground(new Color(100, 100, 100));
+        content.add(msgLbl, gbc);
+
+        gbc.gridy++;
+        gbc.insets = new Insets(10, 0, 0, 0);
+        JLabel detailsLbl = new JLabel(
+                "Bắt đầu: " + app.getStartTime().format(FORMATTER) + "  |  Địa điểm: " + app.getLocation());
+        detailsLbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        detailsLbl.setForeground(COLOR_NAVY);
+        content.add(detailsLbl, gbc);
+
+        container.add(content, BorderLayout.CENTER);
+
+        ModernButton closeBtn = new ModernButton("Đã hiểu", COLOR_SUCCESS);
+        closeBtn.addActionListener(e -> popup.dispose());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        btnPanel.setOpaque(false);
+        btnPanel.add(closeBtn);
+        container.add(btnPanel, BorderLayout.SOUTH);
+
+        popup.add(container);
+
+        Rectangle screen = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        int finalX = screen.x + screen.width - popup.getWidth() - 20;
+        int startY = screen.y + screen.height;
+        int finalY = screen.y + screen.height - popup.getHeight() - 20;
+
+        popup.setLocation(finalX, startY);
+        popup.setVisible(true);
+
+        Timer animateTimer = new Timer(10, null);
+        animateTimer.addActionListener(new ActionListener() {
+            int currentY = startY;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentY > finalY) {
+                    currentY -= 5;
+                    if (currentY < finalY)
+                        currentY = finalY;
+                    popup.setLocation(finalX, currentY);
+                } else {
+                    animateTimer.stop();
+                }
+            }
+        });
+        animateTimer.start();
+    }
+
     private JTextField createStyledTextField() {
         JTextField field = new JTextField();
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -500,7 +634,6 @@ public class UI extends JFrame {
             setLayout(new BorderLayout());
             getContentPane().setBackground(Color.WHITE);
 
-            // Custom Header cho Dialog
             JPanel header = new JPanel(new FlowLayout(FlowLayout.CENTER));
             header.setBackground(COLOR_NAVY);
             header.setBorder(new EmptyBorder(15, 0, 15, 0));

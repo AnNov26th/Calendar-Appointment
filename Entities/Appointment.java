@@ -9,12 +9,18 @@ public class Appointment {
     private LocalDateTime endTime;
     private User owner;
 
+    private Reminder reminder;
+    private boolean isReminderTriggered;
+
     public Appointment(String name, String location, LocalDateTime startTime, LocalDateTime endTime, User owner) {
         this.name = name;
         this.location = location;
         this.startTime = startTime;
         this.endTime = endTime;
         this.owner = owner;
+
+        this.reminder = new Reminder(startTime.minusHours(1), "Sắp đến cuộc hẹn: " + name);
+        this.isReminderTriggered = false;
     }
 
     public String getName() {
@@ -35,6 +41,18 @@ public class Appointment {
 
     public User getOwner() {
         return owner;
+    }
+
+    public Reminder getReminder() {
+        return reminder;
+    }
+
+    public boolean isReminderTriggered() {
+        return isReminderTriggered;
+    }
+
+    public void setReminderTriggered(boolean reminderTriggered) {
+        this.isReminderTriggered = reminderTriggered;
     }
 
     public boolean checkValid() {
