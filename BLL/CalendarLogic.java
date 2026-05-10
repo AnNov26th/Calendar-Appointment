@@ -59,4 +59,8 @@ public class CalendarLogic {
         }
         return null;
     }
+
+    public void saveAll() {
+        dao.saveAll();
+    }
 }

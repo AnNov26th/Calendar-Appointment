@@ -1,0 +1,36 @@
+﻿A,Phân tích yêu cầu hệ thống,Thư viện,2026-05-05T14:00:00,2026-05-05T16:00:00,U01,Trần Hoài An,
+A,Thiết kế Database SQL,Phòng trọ,2026-05-05T09:00:00,2026-05-05T12:00:00,U02,Nguyễn Bá Giàu,
+A,Vẽ Sequence Diagram,Thư viện,2026-05-06T15:00:00,2026-05-06T17:00:00,U03,Trần Kim Lanh,
+G,Review sơ đồ thiết kế,Google Meet,2026-05-09T19:00:00,2026-05-09T20:00:00,U02,Nguyễn Bá Giàu,U02:Nguyễn Bá Giàu;U01:Trần Hoài An;U03:Trần Kim Lanh
+A,Code UI logic (Bỏ qua 3-layer),Phòng Lab,2026-05-11T08:30:00,2026-05-11T12:30:00,U01,Trần Hoài An,
+A,Học tiếng Anh,Nhà văn hóa,2026-05-12T18:00:00,2026-05-12T19:00:00,U01,Trần Hoài An,
+A,Chuẩn bị kịch bản cho Host Minh Tâm,Hòa Khánh,2026-05-13T15:00:00,2026-05-13T17:00:00,U03,Trần Kim Lanh,
+A,Tạo form Đăng nhập WinForms,Phòng trọ,2026-05-15T20:00:00,2026-05-15T22:00:00,U02,Nguyễn Bá Giàu,
+G,Ghép code UI lần 1,Phòng tự học,2026-05-16T09:00:00,2026-05-16T12:00:00,U01,Trần Hoài An,U01:Trần Hoài An;U02:Nguyễn Bá Giàu
+A,Sửa lỗi query bảng Category,Phòng Lab,2026-05-18T13:00:00,2026-05-18T15:00:00,U01,Trần Hoài An,
+A,Họp ban chủ nhiệm CLB,Trường BK,2026-05-19T17:30:00,2026-05-19T18:30:00,U03,Trần Kim Lanh,
+A,Kiểm tra kết nối JDBC,Phòng trọ,2026-05-20T10:00:00,2026-05-20T12:00:00,U02,Nguyễn Bá Giàu,
+A,Chơi Cầu Lông,Sân cầu lông,2026-05-21T12:00:00,2026-05-21T13:00:00,U01,Trần Hoài An,
+G,Fix bug chức năng Thêm/Xóa,Discord,2026-05-22T21:00:00,2026-05-22T23:00:00,U01,Trần Hoài An,U01:Trần Hoài An;U02:Nguyễn Bá Giàu
+A,Viết báo cáo chương 1\c 2,Thư viện,2026-05-25T08:00:00,2026-05-25T11:00:00,U03,Trần Kim Lanh,
+A,Sửa lỗi code logic,Phòng trọ,2026-05-26T14:00:00,2026-05-26T16:00:00,U01,Trần Hoài An,
+A,Test thuật toán tìm kiếm,Phòng Lab,2026-05-27T09:30:00,2026-05-27T11:30:00,U02,Nguyễn Bá Giàu,
+G,Test toàn bộ hệ thống,Google Meet,2026-05-29T20:00:00,2026-05-29T22:00:00,U01,Trần Hoài An,U01:Trần Hoài An;U02:Nguyễn Bá Giàu;U03:Trần Kim Lanh
+A,Chốt form báo cáo tiến độ,Thư viện,2026-05-30T15:00:00,2026-05-30T16:00:00,U03,Trần Kim Lanh,
+G,Họp chuẩn bị slide,Phòng tự học,2026-06-01T14:00:00,2026-06-01T16:00:00,U03,Trần Kim Lanh,U03:Trần Kim Lanh;U01:Trần Hoài An;U02:Nguyễn Bá Giàu
+A,Nghiên cứu biểu đồ thống kê,Phòng trọ,2026-06-02T19:00:00,2026-06-02T21:00:00,U01,Trần Hoài An,
+A,Gặp thầy hướng dẫn Bách Khoa,Văn phòng khoa,2026-06-03T09:00:00,2026-06-03T10:00:00,U01,Trần Hoài An,
+A,Cập nhật Class Diagram,Thư viện,2026-06-04T15:30:00,2026-06-04T17:30:00,U02,Nguyễn Bá Giàu,
+A,Kiểm thử bảo mật đăng nhập,Phòng Lab,2026-06-05T14:00:00,2026-06-05T16:00:00,U01,Trần Hoài An,
+G,Báo cáo tiến độ (Giữa kỳ),Phòng Lab,2026-06-06T08:00:00,2026-06-06T11:00:00,U01,Trần Hoài An,U01:Trần Hoài An;U02:Nguyễn Bá Giàu;U03:Trần Kim Lanh
+A,Thêm tính năng xuất Excel,Phòng Lab,2026-06-07T13:00:00,2026-06-07T16:00:00,U02,Nguyễn Bá Giàu,
+G,Tổng duyệt chương trình,Google Meet,2026-06-08T14:00:00,2026-06-08T16:00:00,U01,Trần Hoài An,U01:Trần Hoài An;U02:Nguyễn Bá Giàu;U03:Trần Kim Lanh
+A,In báo cáo bản nháp,Tiệm photo,2026-06-09T10:00:00,2026-06-09T11:00:00,U03,Trần Kim Lanh,
+A,Soát lỗi chính tả tài liệu,Phòng trọ,2026-06-10T20:00:00,2026-06-10T22:00:00,U03,Trần Kim Lanh,
+A,Check lại cáp HDMI máy chiếu,Phòng hội thảo,2026-06-10T16:00:00,2026-06-10T17:00:00,U02,Nguyễn Bá Giàu,
+G,BẢO VỆ ĐỒ ÁN CHÍNH THỨC,Phòng Hội Đồng,2026-06-11T07:30:00,2026-06-11T11:30:00,U01,Trần Hoài An,U01:Trần Hoài An;U02:Nguyễn Bá Giàu;U03:Trần Kim Lanh
+A,Dọn dẹp phòng trọ,Phòng trọ,2026-06-12T09:00:00,2026-06-12T10:00:00,U01,Trần Hoài An,
+G,Đi ăn mừng hết đồ án!,Quán nướng,2026-06-13T18:00:00,2026-06-13T21:00:00,U02,Nguyễn Bá Giàu,U02:Nguyễn Bá Giàu;U01:Trần Hoài An;U03:Trần Kim Lanh
+A,Dọn dẹp code rác,Phòng trọ,2026-06-14T09:00:00,2026-06-14T11:00:00,U01,Trần Hoài An,
+A,Lên kế hoạch hè,Cafe,2026-06-15T15:00:00,2026-06-15T17:00:00,U02,Nguyễn Bá Giàu,
+A,Test chức năng Reminder,Phòng F207,2026-05-04T14:15:00,2026-05-04T15:15:00,U01,Trần Hoài An,

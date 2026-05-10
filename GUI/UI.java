@@ -12,6 +12,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionEvent;
@@ -63,6 +65,13 @@ public class UI extends JFrame {
 
         setupMainFrame();
         refreshAllViews();
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                calendarLogic.saveAll();
+            }
+        });
 
         startReminderTask();
 
@@ -300,11 +309,16 @@ public class UI extends JFrame {
         JTextField endField = createStyledTextField();
         endField.setText(now.plusHours(1).format(FORMATTER));
 
+        JComboBox<String> typeCombo = new JComboBox<>(new String[] { "Cá nhân", "Group Meeting" });
+        typeCombo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        typeCombo.setPreferredSize(new Dimension(220, 38));
+
         addFormRow(panel, "Người đặt:", userField, gbc, 0);
         addFormRow(panel, "Tên cuộc hẹn:", nameField, gbc, 1);
         addFormRow(panel, "Địa điểm:", locationField, gbc, 2);
-        addFormRow(panel, "Bắt đầu:", startField, gbc, 3);
-        addFormRow(panel, "Kết thúc:", endField, gbc, 4);
+        addFormRow(panel, "Loại:", typeCombo, gbc, 3);
+        addFormRow(panel, "Bắt đầu:", startField, gbc, 4);
+        addFormRow(panel, "Kết thúc:", endField, gbc, 5);
 
         ModernButton saveButton = new ModernButton("Lưu Cuộc Hẹn", COLOR_SUCCESS);
         saveButton.setPreferredSize(new Dimension(200, 40));
@@ -322,25 +336,16 @@ public class UI extends JFrame {
                 LocalDateTime start = LocalDateTime.parse(startField.getText(), FORMATTER);
                 LocalDateTime end = LocalDateTime.parse(endField.getText(), FORMATTER);
 
-                Appointment newApp = new Appointment(name, location, start, end, owner);
+                Appointment newApp;
+                if (typeCombo.getSelectedIndex() == 1) {
+                    newApp = new GroupMeeting(name, location, start, end, owner);
+                } else {
+                    newApp = new Appointment(name, location, start, end, owner);
+                }
 
                 if (!newApp.checkValid()) {
                     showWarning("Thông tin không hợp lệ! Vui lòng kiểm tra tên và thời gian.");
                     return;
-                }
-
-                GroupMeeting matchingGroup = calendarLogic.findGroupMeeting(name, Duration.between(start, end));
-                if (matchingGroup != null) {
-                    int choice = JOptionPane.showConfirmDialog(dialog,
-                            "Phát hiện Group Meeting cùng tên và thời lượng. Tham gia không?",
-                            "Xác nhận", JOptionPane.YES_NO_OPTION);
-                    if (choice == JOptionPane.YES_OPTION) {
-                        matchingGroup.addParticipant(owner);
-                        showCustomInfoDialog("Thành công", "Đã thêm bạn vào Group Meeting.");
-                        dialog.dispose();
-                        refreshAllViews();
-                        return;
-                    }
                 }
 
                 Appointment conflictApp = calendarLogic.checkConflict(start, end, owner);
@@ -371,7 +376,7 @@ public class UI extends JFrame {
         });
 
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -381,7 +386,7 @@ public class UI extends JFrame {
         dialog.setVisible(true);
     }
 
-    private void addFormRow(JPanel p, String label, JTextField tf, GridBagConstraints gbc, int y) {
+    private void addFormRow(JPanel p, String label, JComponent tf, GridBagConstraints gbc, int y) {
         gbc.gridx = 0;
         gbc.gridy = y;
         gbc.weightx = 0.3;
@@ -542,7 +547,7 @@ public class UI extends JFrame {
 
     private void showDetailDialog(Appointment app) {
         CustomDialog detailDialog = new CustomDialog(this, "CHI TIẾT CUỘC HẸN");
-        detailDialog.setSize(400, 450);
+        detailDialog.setSize(500, 550);
 
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -579,10 +584,33 @@ public class UI extends JFrame {
             panel.add(val, gbc);
         }
 
+        int nextRow = data.length;
+        if (app instanceof GroupMeeting) {
+            GroupMeeting gm = (GroupMeeting) app;
+            StringBuilder sb = new StringBuilder();
+            for (User u : gm.getParticipants()) {
+                if (sb.length() > 0)
+                    sb.append(", ");
+                sb.append(u.getUserName());
+            }
+
+            gbc.gridy = nextRow++;
+            gbc.gridx = 0;
+            JLabel lbl = new JLabel("Người tham gia:");
+            lbl.setFont(labelFont);
+            lbl.setForeground(COLOR_NAVY);
+            panel.add(lbl, gbc);
+
+            gbc.gridx = 1;
+            JLabel val = new JLabel("<html><body style='width: 220px'>" + sb.toString() + "</body></html>");
+            val.setFont(valueFont);
+            panel.add(val, gbc);
+        }
+
         ModernButton closeBtn = new ModernButton("Đóng", COLOR_PRIMARY);
         closeBtn.addActionListener(e -> detailDialog.dispose());
 
-        gbc.gridy = data.length;
+        gbc.gridy = nextRow;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
         gbc.insets = new Insets(20, 0, 0, 0);
