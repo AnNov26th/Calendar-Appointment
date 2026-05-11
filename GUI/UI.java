@@ -275,6 +275,65 @@ public class UI extends JFrame {
         for (int i = 0; i < appointmentTable.getColumnCount(); i++) {
             appointmentTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
+
+        appointmentTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+                    int row = appointmentTable.rowAtPoint(e.getPoint());
+                    if (row >= 0) {
+                        Appointment app = calendarLogic.getAllAppointments().get(row);
+                        showDetailDialog(app);
+                    }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTablePopupMenu(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showTablePopupMenu(e);
+                }
+            }
+        });
+    }
+
+    private void showTablePopupMenu(MouseEvent e) {
+        int row = appointmentTable.rowAtPoint(e.getPoint());
+        if (row >= 0 && row < appointmentTable.getRowCount()) {
+            appointmentTable.setRowSelectionInterval(row, row);
+            JPopupMenu popupMenu = new JPopupMenu();
+
+            JMenuItem detailItem = new JMenuItem("Xem chi tiết");
+            detailItem.addActionListener(ev -> {
+                Appointment app = calendarLogic.getAllAppointments().get(row);
+                showDetailDialog(app);
+            });
+
+            JMenuItem deleteItem = new JMenuItem("Xóa cuộc hẹn");
+            deleteItem.setForeground(Color.RED);
+            deleteItem.addActionListener(ev -> {
+                Appointment app = calendarLogic.getAllAppointments().get(row);
+                int confirm = JOptionPane.showConfirmDialog(UI.this,
+                        "Bạn có chắc chắn muốn xóa cuộc hẹn: " + app.getName() + "?",
+                        "Xác nhận xóa", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    calendarLogic.deleteAppointment(app);
+                    refreshAllViews();
+                    showCustomInfoDialog("Thành công", "Đã xóa cuộc hẹn!");
+                }
+            });
+
+            popupMenu.add(detailItem);
+            popupMenu.add(deleteItem);
+            popupMenu.show(e.getComponent(), e.getX(), e.getY());
+        }
     }
 
     private void refreshAllViews() {
